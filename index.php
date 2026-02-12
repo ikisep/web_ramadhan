@@ -17,7 +17,10 @@ $activities_json = json_encode($activities);
 <html lang="id">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <title>Ramadhan Planner</title>
 <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -73,6 +76,36 @@ $activities_json = json_encode($activities);
         <div class="search-section">
             <i class="fas fa-search search-icon"></i>
             <input type="text" id="search" class="search-input" placeholder="Search...">
+        </div>
+        
+        <!-- Jadwal Sholat -->
+        <div class="prayer-times-section">
+            <div class="prayer-header">
+                <h3><i class="fas fa-mosque"></i> Jadwal Sholat</h3>
+                <span class="prayer-city">Bandung</span>
+            </div>
+            <div class="prayer-times-list" id="prayerTimesList">
+                <div class="prayer-item">
+                    <span class="prayer-name">Subuh</span>
+                    <span class="prayer-time" id="subuh">--:--</span>
+                </div>
+                <div class="prayer-item">
+                    <span class="prayer-name">Dzuhur</span>
+                    <span class="prayer-time" id="dzuhur">--:--</span>
+                </div>
+                <div class="prayer-item">
+                    <span class="prayer-name">Ashar</span>
+                    <span class="prayer-time" id="ashar">--:--</span>
+                </div>
+                <div class="prayer-item active-prayer">
+                    <span class="prayer-name">Maghrib</span>
+                    <span class="prayer-time" id="maghrib">--:--</span>
+                </div>
+                <div class="prayer-item">
+                    <span class="prayer-name">Isya</span>
+                    <span class="prayer-time" id="isya">--:--</span>
+                </div>
+            </div>
         </div>
     </aside>
 

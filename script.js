@@ -12,23 +12,119 @@ const closeBtn = document.getElementById('close');
 addBtn.addEventListener('click', () => {
     modal.style.display = 'block';
     document.body.style.overflow = 'hidden';
+    // Prevent body scroll on mobile
+    document.body.style.position = 'fixed';
+    document.body.style.width = '100%';
 });
 
 closeBtn.addEventListener('click', () => {
+    closeModal();
+});
+
+function closeModal() {
     modal.style.display = 'none';
     document.body.style.overflow = 'auto';
-});
+    document.body.style.position = '';
+    document.body.style.width = '';
+}
 
 window.addEventListener('click', (e) => {
     if (e.target === modal) {
-        modal.style.display = 'none';
-        document.body.style.overflow = 'auto';
+        closeModal();
     }
 });
 
+// Close modal on escape key
+document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && modal.style.display === 'block') {
+        closeModal();
+    }
+});
+
+// Prayer Times
+let prayerTimes = {
+    subuh: '04:30',
+    dzuhur: '12:00',
+    ashar: '15:15',
+    maghrib: '18:00',
+    isya: '19:15'
+};
+
+// Load prayer times from API
+async function loadPrayerTimes() {
+    try {
+        const response = await fetch('get_prayer_times.php');
+        const data = await response.json();
+        
+        if (data.success && data.prayers) {
+            prayerTimes = data.prayers;
+            
+            // Update UI
+            document.getElementById('subuh').textContent = prayerTimes.subuh;
+            document.getElementById('dzuhur').textContent = prayerTimes.dzuhur;
+            document.getElementById('ashar').textContent = prayerTimes.ashar;
+            document.getElementById('maghrib').textContent = prayerTimes.maghrib;
+            document.getElementById('isya').textContent = prayerTimes.isya;
+            
+            // Update active prayer
+            updateActivePrayer();
+        }
+    } catch (error) {
+        console.error('Error loading prayer times:', error);
+        // Use default times
+        document.getElementById('subuh').textContent = prayerTimes.subuh;
+        document.getElementById('dzuhur').textContent = prayerTimes.dzuhur;
+        document.getElementById('ashar').textContent = prayerTimes.ashar;
+        document.getElementById('maghrib').textContent = prayerTimes.maghrib;
+        document.getElementById('isya').textContent = prayerTimes.isya;
+    }
+}
+
+// Update active prayer (highlight current prayer time)
+function updateActivePrayer() {
+    const now = new Date();
+    const currentTime = now.getHours() * 60 + now.getMinutes();
+    
+    const prayers = [
+        { name: 'subuh', time: prayerTimes.subuh },
+        { name: 'dzuhur', time: prayerTimes.dzuhur },
+        { name: 'ashar', time: prayerTimes.ashar },
+        { name: 'maghrib', time: prayerTimes.maghrib },
+        { name: 'isya', time: prayerTimes.isya }
+    ];
+    
+    // Remove active class from all
+    document.querySelectorAll('.prayer-item').forEach(item => {
+        item.classList.remove('active-prayer');
+    });
+    
+    // Find next prayer (or current if we're between prayers)
+    let nextPrayer = null;
+    
+    for (let i = 0; i < prayers.length; i++) {
+        const [hours, minutes] = prayers[i].time.split(':').map(Number);
+        const prayerTime = hours * 60 + minutes;
+        
+        if (currentTime < prayerTime) {
+            nextPrayer = prayers[i];
+            break;
+        }
+    }
+    
+    // If no next prayer found (after Isya), use Subuh for tomorrow
+    if (!nextPrayer) {
+        nextPrayer = prayers[0]; // Subuh
+    }
+    
+    // Highlight the next prayer
+    const prayerItem = document.getElementById(nextPrayer.name).closest('.prayer-item');
+    if (prayerItem) {
+        prayerItem.classList.add('active-prayer');
+    }
+}
+
 // Countdown Timer
 const countdownEl = document.getElementById('countdown');
-let iftarTime = 18; // Default 6 PM
 let isNotificationEnabled = true;
 
 function updateCountdown() {
@@ -40,10 +136,11 @@ function updateCountdown() {
     const now = new Date();
     const target = new Date();
     
-    // Set iftar time (default 6 PM, adjust based on location/date)
-    target.setHours(iftarTime, 0, 0, 0);
+    // Get Maghrib time from prayer times
+    const [maghribHours, maghribMinutes] = prayerTimes.maghrib.split(':').map(Number);
+    target.setHours(maghribHours, maghribMinutes, 0, 0);
     
-    // If iftar time has passed today, set for tomorrow
+    // If Maghrib time has passed today, set for tomorrow
     if (target < now) {
         target.setDate(target.getDate() + 1);
     }
@@ -57,6 +154,10 @@ function updateCountdown() {
         `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
 }
 
+// Load prayer times on page load
+loadPrayerTimes();
+setInterval(updateActivePrayer, 60000); // Update every minute
+
 // Toggle notification
 const notificationToggle = document.getElementById('notificationToggle');
 notificationToggle.addEventListener('change', (e) => {
@@ -66,6 +167,14 @@ notificationToggle.addEventListener('change', (e) => {
 
 setInterval(updateCountdown, 1000);
 updateCountdown();
+
+// Reload prayer times daily
+setInterval(() => {
+    const now = new Date();
+    if (now.getHours() === 0 && now.getMinutes() === 0) {
+        loadPrayerTimes();
+    }
+}, 60000); // Check every minute
 
 // Calendar functionality
 const calendarBody = document.getElementById('calendar-body');
@@ -151,14 +260,22 @@ function createDayCell(day, month, year, today) {
         td.appendChild(label);
     });
     
-    // Click to add activity
-    td.addEventListener('click', () => {
+    // Click to add activity (touch and click support)
+    const handleDateClick = () => {
         const dateInput = document.querySelector('input[name="activity_date"]');
         if (dateInput) {
             dateInput.value = dateStr;
             modal.style.display = 'block';
             document.body.style.overflow = 'hidden';
+            document.body.style.position = 'fixed';
+            document.body.style.width = '100%';
         }
+    };
+    
+    td.addEventListener('click', handleDateClick);
+    td.addEventListener('touchend', (e) => {
+        e.preventDefault();
+        handleDateClick();
     });
     
     return td;
@@ -327,24 +444,61 @@ activityForm.addEventListener('submit', async (e) => {
     }
 });
 
-// Smooth scroll animations
-const observerOptions = {
-    threshold: 0.1,
-    rootMargin: '0px 0px -50px 0px'
-};
+// Smooth scroll animations (only on desktop for better mobile performance)
+if (window.innerWidth > 768) {
+    const observerOptions = {
+        threshold: 0.1,
+        rootMargin: '0px 0px -50px 0px'
+    };
 
-const observer = new IntersectionObserver((entries) => {
-    entries.forEach(entry => {
-        if (entry.isIntersecting) {
-            entry.target.style.opacity = '1';
-            entry.target.style.transform = 'translateY(0)';
-        }
+    const observer = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+            if (entry.isIntersecting) {
+                entry.target.style.opacity = '1';
+                entry.target.style.transform = 'translateY(0)';
+            }
+        });
+    }, observerOptions);
+
+    document.querySelectorAll('.reflection-panel, .gallery-panel, .calendar-section').forEach(el => {
+        el.style.opacity = '0';
+        el.style.transform = 'translateY(20px)';
+        el.style.transition = 'opacity 0.6s ease, transform 0.6s ease';
+        observer.observe(el);
     });
-}, observerOptions);
+} else {
+    // On mobile, show elements immediately
+    document.querySelectorAll('.reflection-panel, .gallery-panel, .calendar-section').forEach(el => {
+        el.style.opacity = '1';
+        el.style.transform = 'translateY(0)';
+    });
+}
 
-document.querySelectorAll('.reflection-panel, .gallery-panel, .calendar-section').forEach(el => {
-    el.style.opacity = '0';
-    el.style.transform = 'translateY(20px)';
-    el.style.transition = 'opacity 0.6s ease, transform 0.6s ease';
-    observer.observe(el);
-});
+// Prevent zoom on double tap (iOS)
+let lastTouchEnd = 0;
+document.addEventListener('touchend', (e) => {
+    const now = Date.now();
+    if (now - lastTouchEnd <= 300) {
+        e.preventDefault();
+    }
+    lastTouchEnd = now;
+}, false);
+
+// Optimize touch events for calendar
+const calendarTable = document.querySelector('.calendar-table');
+if (calendarTable) {
+    calendarTable.addEventListener('touchstart', (e) => {
+        // Add active state for touch feedback
+        if (e.target.tagName === 'TD') {
+            e.target.style.backgroundColor = 'rgba(255, 255, 255, 0.15)';
+        }
+    }, { passive: true });
+    
+    calendarTable.addEventListener('touchend', (e) => {
+        if (e.target.tagName === 'TD') {
+            setTimeout(() => {
+                e.target.style.backgroundColor = '';
+            }, 200);
+        }
+    }, { passive: true });
+}
