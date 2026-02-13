@@ -4,6 +4,73 @@ let currentDate = new Date();
 let currentMonth = currentDate.getMonth();
 let currentYear = currentDate.getFullYear();
 
+// Theme Management
+const themeToggle = document.getElementById('themeToggle');
+const themeIcon = document.getElementById('themeIcon');
+const body = document.body;
+
+// Check if it's day or night (6 AM - 6 PM = day, else = night)
+function isDayTime() {
+    const hour = new Date().getHours();
+    return hour >= 6 && hour < 18;
+}
+
+// Auto-detect theme based on time
+function autoDetectTheme() {
+    const savedTheme = localStorage.getItem('theme');
+    const savedAutoMode = localStorage.getItem('autoTheme') === 'true';
+    
+    if (savedTheme && !savedAutoMode) {
+        // User has manually set theme, use that
+        body.classList.toggle('light-theme', savedTheme === 'light');
+        updateThemeIcon(savedTheme === 'light');
+    } else {
+        // Auto-detect based on time
+        const isDay = isDayTime();
+        body.classList.toggle('light-theme', isDay);
+        updateThemeIcon(isDay);
+        localStorage.setItem('theme', isDay ? 'light' : 'dark');
+        localStorage.setItem('autoTheme', 'true');
+    }
+}
+
+// Update theme icon
+function updateThemeIcon(isLight) {
+    if (isLight) {
+        themeIcon.classList.remove('fa-moon');
+        themeIcon.classList.add('fa-sun');
+    } else {
+        themeIcon.classList.remove('fa-sun');
+        themeIcon.classList.add('fa-moon');
+    }
+}
+
+// Toggle theme manually
+themeToggle.addEventListener('click', () => {
+    const isLight = body.classList.toggle('light-theme');
+    const theme = isLight ? 'light' : 'dark';
+    updateThemeIcon(isLight);
+    localStorage.setItem('theme', theme);
+    localStorage.setItem('autoTheme', 'false'); // Disable auto mode when manually toggled
+});
+
+// Initialize theme
+autoDetectTheme();
+
+// Check theme every hour for auto-switch (only if auto mode is enabled)
+setInterval(() => {
+    const savedAutoMode = localStorage.getItem('autoTheme') === 'true';
+    if (savedAutoMode) {
+        const isDay = isDayTime();
+        const currentIsLight = body.classList.contains('light-theme');
+        if (isDay !== currentIsLight) {
+            body.classList.toggle('light-theme', isDay);
+            updateThemeIcon(isDay);
+            localStorage.setItem('theme', isDay ? 'light' : 'dark');
+        }
+    }
+}, 3600000); // Check every hour
+
 // Modal functionality
 const modal = document.getElementById('modal');
 const addBtn = document.getElementById('addBtn');

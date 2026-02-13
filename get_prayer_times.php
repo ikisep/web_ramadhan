@@ -9,7 +9,9 @@ $month = date('n');
 $year = date('Y');
 
 // Using Aladhan API (free Islamic prayer times API)
-$api_url = "http://api.aladhan.com/v1/calendar/$year/$month?latitude=$latitude&longitude=$longitude&method=11&school=1";
+// Method 11 = Kementerian Agama Republik Indonesia (Kemenag)
+// School 1 = Hanafi (for Asr calculation)
+$api_url = "https://api.aladhan.com/v1/calendar/$year/$month?latitude=$latitude&longitude=$longitude&method=11&school=0";
 
 // Initialize cURL
 $ch = curl_init();
@@ -34,13 +36,19 @@ if ($http_code === 200 && $response) {
             if (isset($day['date']['gregorian']['day']) && $day['date']['gregorian']['day'] == $today) {
                 $timings = $day['timings'];
                 
-                // Extract prayer times (remove timezone info)
+                // Extract prayer times (remove timezone info and convert to 24h format)
+                function extractTime($timeString) {
+                    // Format: "HH:MM (GMT+07:00)" or "HH:MM"
+                    $time = trim(explode('(', $timeString)[0]);
+                    return substr($time, 0, 5);
+                }
+                
                 $prayer_times = [
-                    'subuh' => substr($timings['Fajr'], 0, 5),
-                    'dzuhur' => substr($timings['Dhuhr'], 0, 5),
-                    'ashar' => substr($timings['Asr'], 0, 5),
-                    'maghrib' => substr($timings['Maghrib'], 0, 5),
-                    'isya' => substr($timings['Isha'], 0, 5)
+                    'subuh' => extractTime($timings['Fajr']),
+                    'dzuhur' => extractTime($timings['Dhuhr']),
+                    'ashar' => extractTime($timings['Asr']),
+                    'maghrib' => extractTime($timings['Maghrib']),
+                    'isya' => extractTime($timings['Isha'])
                 ];
                 
                 echo json_encode([
@@ -55,11 +63,12 @@ if ($http_code === 200 && $response) {
     }
 }
 
-// Fallback: Return default times if API fails
+// Fallback: Return default times if API fails (approximate times for Bandung)
+// Waktu Ashar biasanya sekitar jam 3:15-3:30 PM di Bandung (bukan jam 5 PM)
 $default_times = [
     'subuh' => '04:30',
     'dzuhur' => '12:00',
-    'ashar' => '15:15',
+    'ashar' => '15:20',  // Fixed: Ashar sekitar jam 3:20 PM untuk Bandung
     'maghrib' => '18:00',
     'isya' => '19:15'
 ];

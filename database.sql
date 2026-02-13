@@ -1,9 +1,5 @@
 -- Database setup for Ramadhan Planner
-CREATE DATABASE IF NOT EXISTS ramadhan_planner CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
-USE ramadhan_planner;
-
--- Activities table
 CREATE TABLE IF NOT EXISTS activities (
     id INT AUTO_INCREMENT PRIMARY KEY,
     title VARCHAR(255) NOT NULL,
@@ -32,4 +28,5 @@ INSERT INTO activities (title, category, activity_date, activity_time) VALUES
 
 INSERT INTO reflections (reflection_date, content) VALUES
 (CURDATE(), 'Day 10: Feeling grateful today, enjoyed Iftar with friends. Need to focus more on Quran recitation.');
+
 

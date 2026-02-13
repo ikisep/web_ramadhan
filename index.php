@@ -30,6 +30,7 @@ $activities_json = json_encode($activities);
 <div class="stars"></div>
 <div class="mosque-silhouette"></div>
 <div class="crescent-moon"></div>
+<div class="sun-icon"></div>
 
 <!-- Top Bar -->
 <header class="top-bar">
@@ -48,6 +49,9 @@ $activities_json = json_encode($activities);
             <span id="countdown-label">Time to Iftar:</span>
             <span id="countdown">00:23:45</span>
         </div>
+        <button class="theme-toggle-btn" id="themeToggle" title="Toggle Theme">
+            <i class="fas fa-moon" id="themeIcon"></i>
+        </button>
         <label class="toggle-switch">
             <input type="checkbox" id="notificationToggle" checked>
             <span class="toggle-slider"></span>
@@ -58,6 +62,18 @@ $activities_json = json_encode($activities);
 <div class="container">
     <!-- Left Panel -->
     <aside class="left-panel">
+        <!-- Menu Navigation -->
+        <div class="menu-navigation">
+            <a href="hadits.php" class="menu-btn hadits-btn">
+                <i class="fas fa-book"></i>
+                <span>Hadits</span>
+            </a>
+            <a href="quran.php" class="menu-btn quran-btn">
+                <i class="fas fa-book-quran"></i>
+                <span>Al-Quran</span>
+            </a>
+        </div>
+        
         <button id="addBtn" class="add-activity-btn">
             <i class="fas fa-plus"></i>
             <span>Add Activity</span>
